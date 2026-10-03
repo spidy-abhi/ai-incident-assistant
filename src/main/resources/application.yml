@@ -1,4 +1,9 @@
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/incident_ai
+    username: postgres
+    password: postgres
+
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -6,3 +11,9 @@ spring:
         options:
           model: llama3.2
           temperature: 0.2
+
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
