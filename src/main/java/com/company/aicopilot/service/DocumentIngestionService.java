@@ -33,6 +33,13 @@ public class DocumentIngestionService {
 
         List<Document> documents = reader.get();
 
+        documents.forEach(document ->
+                document.getMetadata().put(
+                        "source",
+                        "database-connection-pool.md"
+                )
+        );
+
         TokenTextSplitter splitter = new TokenTextSplitter();
 
         List<Document> chunks = splitter.apply(documents);
