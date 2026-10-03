@@ -22,12 +22,26 @@ public class SearchController {
             @RequestBody Map<String, String> request) {
 
         String query = request.get("query");
+        String service = request.get("service");
+        String environment = request.get("environment");
 
-        List<Document> documents =
-                semanticSearchService.search(query);
+        List<Document> documents;
+
+        if (service != null && environment != null) {
+
+            documents = semanticSearchService.search(
+                    query,
+                    service,
+                    environment
+            );
+
+        } else {
+
+            documents = semanticSearchService.search(query);
+        }
 
         return documents.stream()
-                .map(document -> Map.of(
+                .map(document -> Map.<String, Object>of(
                         "content", document.getText(),
                         "metadata", document.getMetadata(),
                         "score", document.getScore() != null

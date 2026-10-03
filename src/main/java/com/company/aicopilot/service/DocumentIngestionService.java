@@ -33,12 +33,32 @@ public class DocumentIngestionService {
 
         List<Document> documents = reader.get();
 
-        documents.forEach(document ->
-                document.getMetadata().put(
-                        "source",
-                        "database-connection-pool.md"
-                )
-        );
+        documents.forEach(document -> {
+    document.getMetadata().put(
+            "source",
+            "database-connection-pool.md"
+    );
+
+    document.getMetadata().put(
+            "service",
+            "payments"
+    );
+
+    document.getMetadata().put(
+            "environment",
+            "production"
+    );
+
+    document.getMetadata().put(
+            "severity",
+            "critical"
+    );
+
+    document.getMetadata().put(
+            "incidentType",
+            "database"
+    );
+});
 
         TokenTextSplitter splitter = new TokenTextSplitter();
 

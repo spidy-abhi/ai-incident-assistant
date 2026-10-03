@@ -26,4 +26,25 @@ public class SemanticSearchService {
 
         return vectorStore.similaritySearch(searchRequest);
     }
+
+    public List<Document> search(
+            String query,
+            String service,
+            String environment) {
+
+        String filterExpression = String.format(
+                "service == '%s' && environment == '%s'",
+                service,
+                environment
+        );
+
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(query)
+                .topK(5)
+                .similarityThreshold(0.0)
+                .filterExpression(filterExpression)
+                .build();
+
+        return vectorStore.similaritySearch(searchRequest);
+    }
 }
