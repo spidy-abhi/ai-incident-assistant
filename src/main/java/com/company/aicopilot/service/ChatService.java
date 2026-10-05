@@ -17,26 +17,33 @@ public class ChatService {
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
     private final IncidentTools incidentTools;
+    private final PromptSecurityService promptSecurityService;
 
     public ChatService(
             ChatClient.Builder chatClientBuilder,
             ChatMemory chatMemory,
-            IncidentTools incidentTools) {
+            IncidentTools incidentTools,
+            PromptSecurityService promptSecurityService) {
 
         this.chatClient = chatClientBuilder.build();
         this.chatMemory = chatMemory;
         this.incidentTools = incidentTools;
+        this.promptSecurityService = promptSecurityService;
     }
 
     public ChatResponse chat(String question) {
 
+        if (!promptSecurityService.isSafe(question)) {
+            throw new IllegalArgumentException(
+                    "Request blocked by prompt security policy"
+            );
+        }
+
         String conversationId = "default-user";
 
-        // 1. Retrieve previous conversation history
         List<Message> conversationHistory =
                 chatMemory.get(conversationId);
 
-        // 2. Send question to the LLM with incident tools available
         String answer = chatClient
                 .prompt()
                 .messages(conversationHistory)
@@ -45,13 +52,11 @@ public class ChatService {
                 .call()
                 .content();
 
-        // 3. Store the user's message
         chatMemory.add(
                 conversationId,
                 new UserMessage(question)
         );
 
-        // 4. Store the assistant's response
         chatMemory.add(
                 conversationId,
                 new AssistantMessage(answer)
