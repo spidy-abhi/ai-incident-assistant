@@ -42,4 +42,16 @@ public class GlobalExceptionHandler {
                         "message", "Request validation failed"
                 ));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpectedException(
+            Exception exception) {
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "error", "Internal server error",
+                        "message", "An unexpected error occurred"
+                ));
+    }
 }
