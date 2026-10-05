@@ -1,6 +1,7 @@
 package com.company.aicopilot.service;
 
-import com.company.aicopilot.model.RagResponse;
+import com.company.aicopilot.model.IncidentAnalysis;
+import com.company.aicopilot.model.IncidentAnalysisResponse;
 import com.company.aicopilot.tools.IncidentTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -36,11 +37,11 @@ public class IncidentAssistantService {
         this.incidentTools = incidentTools;
     }
 
-    public RagResponse answer(String question) {
+    public IncidentAnalysisResponse answer(String question) {
 
         String conversationId = "default-user";
 
-        // 1. Retrieve previous conversation
+        // 1. Retrieve previous conversation history
         List<Message> previousMessages =
                 chatMemory.get(conversationId);
 
@@ -59,9 +60,12 @@ public class IncidentAssistantService {
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n---\n\n"));
 
-        // 4. Build prompt
+        // 4. Build structured-output prompt
         String prompt = """
-                You are an enterprise incident assistant.
+                You are an enterprise incident analysis assistant.
+
+                Analyze the user's incident question using the available
+                knowledge base and incident tools.
 
                 You have access to:
 
@@ -69,13 +73,16 @@ public class IncidentAssistantService {
                 2. Incident lookup and service health tools.
                 3. Conversation history.
 
-                Use the tools when the user asks for current incident
-                information or service health.
+                Use tools when the user asks about a specific incident,
+                incident status, severity, or service health.
 
-                Use the knowledge base when the user asks about causes,
-                troubleshooting, prevention, or technical explanations.
+                Use the knowledge base when the user asks about:
+                - possible causes
+                - troubleshooting
+                - prevention
+                - technical explanations
 
-                You may use both tools and the knowledge base when necessary.
+                You may use both tools and the knowledge base.
 
                 IMPORTANT RULES:
 
@@ -84,8 +91,28 @@ public class IncidentAssistantService {
                 3. Clearly distinguish possible causes from confirmed facts.
                 4. Use tool results for incident status and service health.
                 5. Use the knowledge base for technical explanations.
-                6. If the available evidence is insufficient, say so.
+                6. If the evidence is insufficient, say so.
+                7. The confidence field must be LOW, MEDIUM, or HIGH.
 
+8. When getIncident() returns an incident, its severity is authoritative.
+   Copy that severity exactly.
+
+9. When getIncident() returns an incident, its status is authoritative.
+   Copy that status exactly.
+
+10. Never infer or downgrade the severity when the incident tool provides
+    a known severity.
+
+11. Never replace a known incident status with a generic status such
+    as UNRESOLVED.
+
+12. If the incident tool reports:
+    severity = Critical
+    status = Investigating
+
+    then the structured response MUST contain:
+    severity = CRITICAL
+    status = INVESTIGATING.
                 Knowledge Base Context:
                 %s
 
@@ -99,22 +126,29 @@ public class IncidentAssistantService {
                 new UserMessage(question)
         );
 
-        // 6. Ask the LLM with tools available
-        String answer = chatClient
-                .prompt()
-                .messages(previousMessages)
-                .user(prompt)
-                .tools(incidentTools)
-                .call()
-                .content();
-
-        // 7. Store assistant response
-        chatMemory.add(
-                conversationId,
-                new AssistantMessage(answer)
+        // 6. Ask the LLM and receive a typed IncidentAnalysis object
+       IncidentAnalysis analysis = chatClient
+        .prompt()
+        .messages(previousMessages)
+        .user(prompt)
+        .tools(incidentTools)
+        .call()
+        .entity(
+                IncidentAnalysis.class,
+                spec -> spec
+                        .useProviderStructuredOutput()
+                        .validateSchema()
         );
 
-        // 8. Return answer and sources
+        // 7. Store a representation of the structured response
+        chatMemory.add(
+                conversationId,
+                new AssistantMessage(
+                        analysis.toString()
+                )
+        );
+
+        // 8. Build source information
         List<Map<String, Object>> sources = documents.stream()
                 .map(document -> Map.<String, Object>of(
                         "source",
@@ -127,9 +161,8 @@ public class IncidentAssistantService {
                 ))
                 .toList();
 
-        return new RagResponse(
-                question,
-                answer,
+        return new IncidentAnalysisResponse(
+                analysis,
                 sources
         );
     }

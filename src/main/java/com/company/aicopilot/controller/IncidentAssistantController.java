@@ -1,6 +1,6 @@
 package com.company.aicopilot.controller;
 
-import com.company.aicopilot.model.RagResponse;
+import com.company.aicopilot.model.IncidentAnalysisResponse;
 import com.company.aicopilot.service.IncidentAssistantService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,7 @@ public class IncidentAssistantController {
     }
 
     @PostMapping
-    public RagResponse ask(
+    public IncidentAnalysisResponse ask(
             @RequestBody Map<String, String> request) {
 
         String question = request.get("question");
