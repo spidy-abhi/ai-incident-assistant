@@ -7,13 +7,12 @@ import org.springframework.stereotype.Component;
 public class IncidentTools {
 
     @Tool(description = """
-            Look up an incident by its incident ID.
-            Use this tool when the user asks for the status,
-            severity, service, or other details of a specific incident.
+            Look up a specific incident by its incident ID.
+            Use this when the user asks about a particular incident,
+            including its status, severity, service, environment, or summary.
             """)
     public IncidentDetails getIncident(String incidentId) {
 
-        // Demo incident data for the MVP
         if ("INC-8472".equalsIgnoreCase(incidentId)) {
 
             return new IncidentDetails(
@@ -36,6 +35,71 @@ public class IncidentTools {
         );
     }
 
+    @Tool(description = """
+            Check the current health status of an application service.
+            Use this when the user asks whether a service is healthy,
+            operational, degraded, or unavailable.
+            """)
+    public ServiceHealth getServiceHealth(String service) {
+
+        if ("payments".equalsIgnoreCase(service)) {
+
+            return new ServiceHealth(
+                    "payments",
+                    "DEGRADED",
+                    "Database connection pool exhaustion is affecting the service"
+            );
+        }
+
+        if ("orders".equalsIgnoreCase(service)) {
+
+            return new ServiceHealth(
+                    "orders",
+                    "HEALTHY",
+                    "No active issues detected"
+            );
+        }
+
+        return new ServiceHealth(
+                service,
+                "UNKNOWN",
+                "No service health information available"
+        );
+    }
+
+    @Tool(description = """
+            Retrieve recent incidents for a service.
+            Use this when the user asks about recent incidents,
+            incident history, or recent problems affecting a service.
+            """)
+    public RecentIncidents getRecentIncidents(String service) {
+
+        if ("payments".equalsIgnoreCase(service)) {
+
+            return new RecentIncidents(
+                    service,
+                    2,
+                    "INC-8472: Database connection pool exhaustion; " +
+                    "INC-8461: Increased database response time"
+            );
+        }
+
+        if ("orders".equalsIgnoreCase(service)) {
+
+            return new RecentIncidents(
+                    service,
+                    0,
+                    "No recent incidents"
+            );
+        }
+
+        return new RecentIncidents(
+                service,
+                0,
+                "No incident history available"
+        );
+    }
+
     public record IncidentDetails(
             String incidentId,
             String status,
@@ -43,6 +107,20 @@ public class IncidentTools {
             String service,
             String environment,
             String summary
+    ) {
+    }
+
+    public record ServiceHealth(
+            String service,
+            String status,
+            String details
+    ) {
+    }
+
+    public record RecentIncidents(
+            String service,
+            int count,
+            String incidents
     ) {
     }
 }
