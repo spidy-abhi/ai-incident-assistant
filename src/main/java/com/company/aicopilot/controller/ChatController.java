@@ -3,6 +3,7 @@ package com.company.aicopilot.controller;
 import com.company.aicopilot.model.ChatRequest;
 import com.company.aicopilot.model.ChatResponse;
 import com.company.aicopilot.service.ChatService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,7 +17,8 @@ public class ChatController {
     }
 
     @PostMapping
-    public ChatResponse chat(@RequestBody ChatRequest request) {
+    public ChatResponse chat(
+            @Valid @RequestBody ChatRequest request) {
 
         return chatService.chat(request.getQuestion());
     }

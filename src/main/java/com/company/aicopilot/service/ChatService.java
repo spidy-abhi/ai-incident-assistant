@@ -36,7 +36,7 @@ public class ChatService {
         List<Message> conversationHistory =
                 chatMemory.get(conversationId);
 
-        // 2. Send question to the LLM with the incident tool available
+        // 2. Send question to the LLM with incident tools available
         String answer = chatClient
                 .prompt()
                 .messages(conversationHistory)

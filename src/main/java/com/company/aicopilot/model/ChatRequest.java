@@ -1,7 +1,12 @@
 package com.company.aicopilot.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class ChatRequest {
 
+    @NotBlank(message = "Question must not be empty")
+    @Size(max = 2000, message = "Question must not exceed 2000 characters")
     private String question;
 
     public ChatRequest() {
